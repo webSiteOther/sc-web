@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>المركز العلمي - شاشة الترحيب</title>
+    
+    <!-- ربط خط عربي احترافي -->
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@500;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        /* =========================================
+           إعدادات عامة وألوان المشروع
+           ========================================= */
+        :root {
+            --bg-gradient: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            --primary-color: #1a365d;
+            --shadow-color: rgba(0, 0, 0, 0.15);
+            --glow-color: rgba(26, 54, 93, 0.2);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Tajawal', sans-serif;
+            background: var(--bg-gradient);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            overflow: hidden; /* لمنع ظهور شريط التمرير */
+        }
+
+        /* =========================================
+           1. تصميم وحركة عنوان الترحيب
+           ========================================= */
+        .welcome-container {
+            text-align: center;
+            margin-bottom: 60px;
+            z-index: 10;
+        }
+
+        .welcome-title {
+            font-size: 4.5rem;
+            color: var(--primary-color);
+            font-weight: 800;
+            /* تأثير Glow خفيف */
+            text-shadow: 0 10px 20px var(--glow-color);
+            
+            /* Animation: Fade In + Slide Down + Scale */
+            opacity: 0;
+            transform: translateY(-40px) scale(0.95);
+            animation: welcomeAnim 2s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+        }
+
+        @keyframes welcomeAnim {
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        /* =========================================
+           2. تصميم حاوية الصور
+           ========================================= */
+        .slider-container {
+            width: 100%;
+            overflow: hidden;
+            padding: 30px 0;
+            position: relative;
+        }
+
+        /* تأثير التلاشي (Fade) على أطراف الشاشة لتبدو الصور وكأنها تظهر وتختفي بنعومة */
+        .slider-container::before,
+        .slider-container::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            width: 150px;
+            height: 100%;
+            z-index: 2;
+            pointer-events: none;
+        }
+
+        .slider-container::before {
+            left: 0;
+            background: linear-gradient(to right, #e9ecef 0%, transparent 100%);
+        }
+
+        .slider-container::after {
+            right: 0;
+            background: linear-gradient(to left, #f8f9fa 0%, transparent 100%);
+        }
+
+        /* =========================================
+           3. شريط الصور المتحرك
+           ========================================= */
+        .slider-track {
+            display: flex;
+            gap: 30px;
+            width: max-content; /* لضمان أخذ المساحة الكافية لكل الصور */
+            /* سرعة الحركة: 100 ثانية لتكون بطيئة ومريحة، يمكنك تعديلها */
+            animation: scrollTrack 100s linear infinite; 
+        }
+
+        /* إيقاف الحركة عند وقوف الماوس */
+        .slider-track:hover {
+            animation-play-state: paused;
+        }
+
+        /* الحركة من اليمين إلى اليسار */
+        @keyframes scrollTrack {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); } 
+        }
+
+        /* =========================================
+           4. تصميم وتأثيرات الصور
+           ========================================= */
+        .slider-track img {
+            height: 300px;
+            width: 420px;
+            object-fit: cover; /* لمنع تشوه الصور */
+            border: 6px solid #ffffff; /* إطار أبيض بسيط */
+            border-radius: 16px; /* زوايا دائرية */
+            box-shadow: 0 8px 15px var(--shadow-color); /* ظل ناعم */
+            transition: transform 0.4s ease, box-shadow 0.4s ease;
+            cursor: pointer;
+        }
+
+        /* التأثير عند مرور الماوس (Hover Zoom) */
+        .slider-track img:hover {
+            transform: scale(1.08); /* تكبير بسيط */
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.25); /* زيادة الظل */
+            z-index: 5;
+            position: relative;
+        }
+
+        /* =========================================
+           5. التوافق مع الشاشات المختلفة (Responsive)
+           ========================================= */
+        @media (max-width: 1200px) {
+            .welcome-title { font-size: 3.5rem; }
+            .slider-track img { height: 250px; width: 350px; }
+        }
+
+        @media (max-width: 768px) {
+            .welcome-title { font-size: 2.5rem; }
+            .slider-track img { height: 180px; width: 260px; border-width: 4px; }
+            .slider-container::before, .slider-container::after { width: 50px; }
+        }
+
+        @media (max-width: 480px) {
+            .welcome-title { font-size: 1.8rem; }
+            .slider-track img { height: 140px; width: 200px; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- قسم الترحيب -->
+    <div class="welcome-container">
+        <h1 class="welcome-title">أهلاً بيك في المركز العلمي</h1>
+    </div>
+
+    <!-- قسم معرض الصور -->
+    <div class="slider-container">
+        <!-- لضمان سهولة الحركة من اليمين لليسار، تم جعل الاتجاه LTR داخلياً هنا -->
+        <div class="slider-track" id="sliderTrack" dir="ltr">
+            <!-- سيتم إضافة الصور هنا تلقائياً عبر JavaScript -->
+        </div>
+    </div>
+
+    <script>
+        /* =========================================
+           كود توليد وتحريك الصور تلقائياً
+           ========================================= */
+        document.addEventListener("DOMContentLoaded", () => {
+            const sliderTrack = document.getElementById("sliderTrack");
+            
+            // عدد الصور الإجمالي المطلوبة
+            const totalImages = 52;
+            const imageFolder = "images/";
+
+            // مصفوفة لتخزين عناصر الصور
+            const imagesArray = [];
+
+            // 1. توليد الصور الأساسية من 1 إلى 52
+            for (let i = 1; i <= totalImages; i++) {
+                const img = document.createElement("img");
+                
+                // بناء مسار الصورة: img (1).jpeg
+                img.src = `${imageFolder}img (${i}).jpeg`;
+                img.alt = `المركز العلمي - صورة ${i}`;
+                
+                // في حال عدم وجود صورة معينة، يتم إخفاؤها حتى لا تظهر أيقونة مكسورة
+                img.onerror = function() {
+                    this.style.display = 'none';
+                };
+
+                imagesArray.push(img);
+                sliderTrack.appendChild(img);
+            }
+
+            // 2. استنساخ الصور (Cloning) لعمل حركة لا نهائية (Infinite Loop)
+            imagesArray.forEach(img => {
+                const clone = img.cloneNode(true);
+                sliderTrack.appendChild(clone);
+            });
+        });
+    </script>
+
+</body>
+</html>
