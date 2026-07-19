@@ -32,7 +32,7 @@
             display: flex;
             flex-direction: column;
             justify-content: center;
-            overflow: hidden; /* لمنع ظهور شريط التمرير */
+            overflow: hidden;
         }
 
         /* =========================================
@@ -48,10 +48,7 @@
             font-size: 4.5rem;
             color: var(--primary-color);
             font-weight: 800;
-            /* تأثير Glow خفيف */
             text-shadow: 0 10px 20px var(--glow-color);
-            
-            /* Animation: Fade In + Slide Down + Scale */
             opacity: 0;
             transform: translateY(-40px) scale(0.95);
             animation: welcomeAnim 2s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
@@ -74,7 +71,6 @@
             position: relative;
         }
 
-        /* تأثير التلاشي (Fade) على أطراف الشاشة لتبدو الصور وكأنها تظهر وتختفي بنعومة */
         .slider-container::before,
         .slider-container::after {
             content: "";
@@ -102,17 +98,15 @@
         .slider-track {
             display: flex;
             gap: 30px;
-            width: max-content; /* لضمان أخذ المساحة الكافية لكل الصور */
-            /* سرعة الحركة: 100 ثانية لتكون بطيئة ومريحة، يمكنك تعديلها */
+            width: max-content;
+            /* وقت الحركة: 100 ثانية لتكون بطيئة، زودي الرقم لو أردتي إبطاءها أكثر */
             animation: scrollTrack 100s linear infinite; 
         }
 
-        /* إيقاف الحركة عند وقوف الماوس */
         .slider-track:hover {
             animation-play-state: paused;
         }
 
-        /* الحركة من اليمين إلى اليسار */
         @keyframes scrollTrack {
             0% { transform: translateX(0); }
             100% { transform: translateX(-50%); } 
@@ -124,24 +118,23 @@
         .slider-track img {
             height: 300px;
             width: 420px;
-            object-fit: cover; /* لمنع تشوه الصور */
-            border: 6px solid #ffffff; /* إطار أبيض بسيط */
-            border-radius: 16px; /* زوايا دائرية */
-            box-shadow: 0 8px 15px var(--shadow-color); /* ظل ناعم */
+            object-fit: cover;
+            border: 6px solid #ffffff;
+            border-radius: 16px;
+            box-shadow: 0 8px 15px var(--shadow-color);
             transition: transform 0.4s ease, box-shadow 0.4s ease;
             cursor: pointer;
         }
 
-        /* التأثير عند مرور الماوس (Hover Zoom) */
         .slider-track img:hover {
-            transform: scale(1.08); /* تكبير بسيط */
-            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.25); /* زيادة الظل */
+            transform: scale(1.08);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.25);
             z-index: 5;
             position: relative;
         }
 
         /* =========================================
-           5. التوافق مع الشاشات المختلفة (Responsive)
+           5. Responsive
            ========================================= */
         @media (max-width: 1200px) {
             .welcome-title { font-size: 3.5rem; }
@@ -169,48 +162,66 @@
 
     <!-- قسم معرض الصور -->
     <div class="slider-container">
-        <!-- لضمان سهولة الحركة من اليمين لليسار، تم جعل الاتجاه LTR داخلياً هنا -->
         <div class="slider-track" id="sliderTrack" dir="ltr">
-            <!-- سيتم إضافة الصور هنا تلقائياً عبر JavaScript -->
+            <!-- الصور ستضاف هنا تلقائياً -->
         </div>
     </div>
 
     <script>
         /* =========================================
-           كود توليد وتحريك الصور تلقائياً
+           كود جلب الصور ديناميكياً متجاهلاً الترتيب
            ========================================= */
         document.addEventListener("DOMContentLoaded", () => {
             const sliderTrack = document.getElementById("sliderTrack");
-            
-            // عدد الصور الإجمالي المطلوبة
-            const totalImages = 52;
             const imageFolder = "images/";
+            
+            // رقم الحد الأقصى للبحث (سيبحث من 1 إلى 150)
+            const maxImagesToCheck = 150; 
+            const validImages = [];
+            let imagesChecked = 0;
 
-            // مصفوفة لتخزين عناصر الصور
-            const imagesArray = [];
-
-            // 1. توليد الصور الأساسية من 1 إلى 52
-            for (let i = 1; i <= totalImages; i++) {
-                const img = document.createElement("img");
-                
-                // بناء مسار الصورة: img (1).jpeg
+            // حلقة للبحث عن كل الصور الممكنة
+            for (let i = 1; i <= maxImagesToCheck; i++) {
+                const img = new Image();
                 img.src = `${imageFolder}img (${i}).jpeg`;
-                img.alt = `المركز العلمي - صورة ${i}`;
                 
-                // في حال عدم وجود صورة معينة، يتم إخفاؤها حتى لا تظهر أيقونة مكسورة
-                img.onerror = function() {
-                    this.style.display = 'none';
+                // في حالة أن الصورة موجودة ونجح تحميلها
+                img.onload = () => {
+                    validImages.push({ element: img, index: i });
+                    imagesChecked++;
+                    checkIfAllDone();
                 };
 
-                imagesArray.push(img);
-                sliderTrack.appendChild(img);
+                // في حالة أن الصورة غير موجودة (يتجاهلها بهدوء)
+                img.onerror = () => {
+                    imagesChecked++;
+                    checkIfAllDone();
+                };
             }
 
-            // 2. استنساخ الصور (Cloning) لعمل حركة لا نهائية (Infinite Loop)
-            imagesArray.forEach(img => {
-                const clone = img.cloneNode(true);
-                sliderTrack.appendChild(clone);
-            });
+            // دالة تنفذ بعد الانتهاء من فحص جميع الأرقام
+            function checkIfAllDone() {
+                if (imagesChecked === maxImagesToCheck) {
+                    
+                    // ترتيب الصور برمجياً حسب أرقامها بغض النظر عن ترتيب الويندوز
+                    validImages.sort((a, b) => a.index - b.index);
+
+                    // 1. إضافة الصور الفعلية الموجودة فقط للشريط
+                    validImages.forEach(item => {
+                        const imgElement = document.createElement('img');
+                        imgElement.src = item.element.src;
+                        imgElement.alt = `المركز العلمي - صورة ${item.index}`;
+                        sliderTrack.appendChild(imgElement);
+                    });
+
+                    // 2. استنساخ نفس الصور لعمل الحركة اللانهائية
+                    validImages.forEach(item => {
+                        const clone = document.createElement('img');
+                        clone.src = item.element.src;
+                        sliderTrack.appendChild(clone);
+                    });
+                }
+            }
         });
     </script>
 
