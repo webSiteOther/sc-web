@@ -62,17 +62,18 @@
         }
 
         /* =========================================
-           2. تصميم حاوية الصور
+           2. تصميم حاوية الصور (الحركة الدائرية المتصلة)
            ========================================= */
-        .slider-container {
+        .slider-wrapper {
             width: 100%;
             overflow: hidden;
             padding: 30px 0;
             position: relative;
         }
 
-        .slider-container::before,
-        .slider-container::after {
+        /* تأثير التلاشي على الأطراف */
+        .slider-wrapper::before,
+        .slider-wrapper::after {
             content: "";
             position: absolute;
             top: 0;
@@ -81,41 +82,38 @@
             z-index: 2;
             pointer-events: none;
         }
+        .slider-wrapper::before { left: 0; background: linear-gradient(to right, #e9ecef 0%, transparent 100%); }
+        .slider-wrapper::after { right: 0; background: linear-gradient(to left, #f8f9fa 0%, transparent 100%); }
 
-        .slider-container::before {
-            left: 0;
-            background: linear-gradient(to right, #e9ecef 0%, transparent 100%);
-        }
-
-        .slider-container::after {
-            right: 0;
-            background: linear-gradient(to left, #f8f9fa 0%, transparent 100%);
-        }
-
-        /* =========================================
-           3. شريط الصور المتحرك
-           ========================================= */
         .slider-track {
             display: flex;
-            gap: 30px;
             width: max-content;
-            /* وقت الحركة: 100 ثانية لتكون بطيئة، زودي الرقم لو أردتي إبطاءها أكثر */
-            animation: scrollTrack 100s linear infinite; 
         }
 
-        .slider-track:hover {
+        /* المجموعات التي تتحرك */
+        .slide-group {
+            display: flex;
+            gap: 30px;
+            padding-right: 30px; /* مسافة بين المجموعة الأولى والثانية */
+            /* سرعة الحركة - يمكنك تعديل الـ 60s حسب الرغبة */
+            animation: scrollTrack 60s linear infinite;
+        }
+
+        /* إيقاف الحركة عند وقوف الماوس على أي صورة */
+        .slider-track:hover .slide-group {
             animation-play-state: paused;
         }
 
+        /* الحركة الجذريّة التي تضمن عدم الانقطاع */
         @keyframes scrollTrack {
             0% { transform: translateX(0); }
-            100% { transform: translateX(-50%); } 
+            100% { transform: translateX(-100%); } 
         }
 
         /* =========================================
-           4. تصميم وتأثيرات الصور
+           3. تصميم وتأثيرات الصور
            ========================================= */
-        .slider-track img {
+        .slide-group img {
             height: 300px;
             width: 420px;
             object-fit: cover;
@@ -126,7 +124,7 @@
             cursor: pointer;
         }
 
-        .slider-track img:hover {
+        .slide-group img:hover {
             transform: scale(1.08);
             box-shadow: 0 15px 30px rgba(0, 0, 0, 0.25);
             z-index: 5;
@@ -134,91 +132,91 @@
         }
 
         /* =========================================
-           5. Responsive
+           4. الشاشات المختلفة (Responsive)
            ========================================= */
         @media (max-width: 1200px) {
             .welcome-title { font-size: 3.5rem; }
-            .slider-track img { height: 250px; width: 350px; }
+            .slide-group img { height: 250px; width: 350px; }
         }
-
         @media (max-width: 768px) {
             .welcome-title { font-size: 2.5rem; }
-            .slider-track img { height: 180px; width: 260px; border-width: 4px; }
-            .slider-container::before, .slider-container::after { width: 50px; }
+            .slide-group img { height: 180px; width: 260px; border-width: 4px; }
+            .slider-wrapper::before, .slider-wrapper::after { width: 50px; }
         }
-
         @media (max-width: 480px) {
             .welcome-title { font-size: 1.8rem; }
-            .slider-track img { height: 140px; width: 200px; }
+            .slide-group img { height: 140px; width: 200px; }
         }
     </style>
 </head>
 <body>
 
-    <!-- قسم الترحيب -->
     <div class="welcome-container">
         <h1 class="welcome-title">أهلاً بيك في المركز العلمي</h1>
     </div>
 
-    <!-- قسم معرض الصور -->
-    <div class="slider-container">
-        <div class="slider-track" id="sliderTrack" dir="ltr">
-            <!-- الصور ستضاف هنا تلقائياً -->
+    <!-- حاوية شريط الصور -->
+    <div class="slider-wrapper" dir="ltr">
+        <div class="slider-track" id="sliderTrack">
+            <!-- المجموعة الأساسية من الصور -->
+            <div class="slide-group" id="group1"></div>
+            <!-- المجموعة المطابقة تماماً لضمان الحركة الدائرية المتصلة -->
+            <div class="slide-group" id="group2"></div>
         </div>
     </div>
 
     <script>
         /* =========================================
-           كود جلب الصور ديناميكياً متجاهلاً الترتيب
+           كود جلب الصور وتجهيز المجموعتين بشكل احترافي
            ========================================= */
         document.addEventListener("DOMContentLoaded", () => {
-            const sliderTrack = document.getElementById("sliderTrack");
+            const group1 = document.getElementById("group1");
+            const group2 = document.getElementById("group2");
             const imageFolder = "images/";
             
-            // رقم الحد الأقصى للبحث (سيبحث من 1 إلى 150)
+            // سيبحث عن الصور من 1 حتى 150 لضمان شمول الفولدر بالكامل
             const maxImagesToCheck = 150; 
-            const validImages = [];
+            let validImages = [];
             let imagesChecked = 0;
 
-            // حلقة للبحث عن كل الصور الممكنة
+            // 1. فحص جميع الأرقام المحتملة في مجلد الصور
             for (let i = 1; i <= maxImagesToCheck; i++) {
-                const img = new Image();
+                let img = new Image();
                 img.src = `${imageFolder}img (${i}).jpeg`;
                 
-                // في حالة أن الصورة موجودة ونجح تحميلها
+                // في حالة نجاح التحميل (الصورة موجودة)
                 img.onload = () => {
-                    validImages.push({ element: img, index: i });
+                    validImages.push({ src: img.src, index: i });
                     imagesChecked++;
-                    checkIfAllDone();
+                    checkIfDone();
                 };
 
-                // في حالة أن الصورة غير موجودة (يتجاهلها بهدوء)
+                // في حالة فشل التحميل (الرقم غير موجود) نتخطاه بدون ترك فراغ
                 img.onerror = () => {
                     imagesChecked++;
-                    checkIfAllDone();
+                    checkIfDone();
                 };
             }
 
-            // دالة تنفذ بعد الانتهاء من فحص جميع الأرقام
-            function checkIfAllDone() {
+            // 2. هذه الدالة تتأكد أن الفحص اكتمل لجميع الصور قبل رسمها لضمان الترتيب المثالي
+            function checkIfDone() {
                 if (imagesChecked === maxImagesToCheck) {
                     
-                    // ترتيب الصور برمجياً حسب أرقامها بغض النظر عن ترتيب الويندوز
+                    // ترتيب الصور تصاعدياً لتظهر بشكل منطقي
                     validImages.sort((a, b) => a.index - b.index);
 
-                    // 1. إضافة الصور الفعلية الموجودة فقط للشريط
+                    // إضافة كل الصور الموجودة للمجموعة الأولى
                     validImages.forEach(item => {
                         const imgElement = document.createElement('img');
-                        imgElement.src = item.element.src;
-                        imgElement.alt = `المركز العلمي - صورة ${item.index}`;
-                        sliderTrack.appendChild(imgElement);
+                        imgElement.src = item.src;
+                        group1.appendChild(imgElement);
                     });
 
-                    // 2. استنساخ نفس الصور لعمل الحركة اللانهائية
+                    // استنساخ نفس الصور بنفس الترتيب للمجموعة الثانية للحركة المتصلة
                     validImages.forEach(item => {
-                        const clone = document.createElement('img');
-                        clone.src = item.element.src;
-                        sliderTrack.appendChild(clone);
+                        const imgElement = document.createElement('img');
+                        imgElement.src = item.src;
+                        group2.appendChild(imgElement);
                     });
                 }
             }
